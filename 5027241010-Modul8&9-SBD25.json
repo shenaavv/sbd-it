@@ -1,0 +1,197 @@
+use WarungPakBudi-5027241010
+
+// 1.
+// insert data produk ke dalam collection produk
+db.createCollection("produk")
+db.produk.insertMany([
+  {
+    nama_produk: "Indomie Goreng Spesial",
+    kategori: "Makanan Instan",
+    harga_beli: 2500,
+    harga_jual: 3000,
+    stok: 100,
+    satuan: "pcs",
+    tanggal_masuk: ISODate("2025-05-01T00:00:00Z")
+  },
+  {
+    nama_produk: "Sabun Mandi Lifebuoy Total 10",
+    kategori: "Perawatan Diri",
+    harga_beli: 3000,
+    harga_jual: 4000,
+    stok: 75,
+    satuan: "pcs",
+    tanggal_masuk: ISODate("2025-05-01T00:00:00Z")
+  },
+  {
+    nama_produk: "Kopi Kapal Api Special Mix",
+    kategori: "Minuman",
+    harga_beli: 1000,
+    harga_jual: 1500,
+    stok: 200,
+    satuan: "sachet",
+    tanggal_masuk: ISODate("2025-04-20T00:00:00Z")
+  },
+  {
+    nama_produk: "Beras Rojolele Super",
+    kategori: "Bahan Pokok",
+    harga_beli: 60000,
+    harga_jual: 65000,
+    stok: 30,
+    satuan: "karung 5kg",
+    tanggal_masuk: ISODate("2025-05-10T00:00:00Z")
+  }
+])
+
+// insert data pelanggan ke dalam collection pelanggan
+db.createCollection("pelanggan")
+db.pelanggan.insertMany([
+  {
+    nama: "Siti Aminah",
+    alamat: "Jl. Melati No. 10, BME",
+    tanggal_gabung: ISODate("2023-12-20T00:00:00Z"),
+    poin_loyalitas: 120
+  },
+  {
+    nama: "Budi Hartono",
+    alamat: "Jl. Mawar No. 1, BME",
+    tanggal_gabung: ISODate("2024-02-01T00:00:00Z"),
+    poin_loyalitas: 90
+  }
+])
+
+// insert data transaksi ke dalam collection transaksi
+db.createCollection("transaksi")
+db.transaksi.insertMany([
+  {
+    nama_pelanggan: "Siti Aminah",
+    tanggal_transaksi: ISODate("2025-05-20T17:00:00Z"),
+    metode_pembayaran: "Tunai",
+    status: "Selesai",
+    daftar_produk: [
+      {
+        nama_produk: "Indomie Goreng Spesial",
+        harga: 3000,
+        jumlah: 5,
+        total: 15000
+      },
+      {
+        nama_produk: "Kopi Kapal Api Special Mix",
+        harga: 1500,
+        jumlah: 10,
+        total: 15000
+      }
+    ],
+    total_belanja: 30000
+  },
+  {
+    nama_pelanggan: "Budi Hartono",
+    tanggal_transaksi: ISODate("2025-05-21T21:30:00Z"),
+    metode_pembayaran: "QRIS",
+    status: "Selesai",
+    daftar_produk: [
+      {
+        nama_produk: "Beras Rojolele Super",
+        harga: 65000,
+        jumlah: 1,
+        total: 65000
+      },
+      {
+        nama_produk: "Sabun Mandi Lifebuoy Total 10",
+        harga: 4000,
+        jumlah: 2,
+        total: 8000
+      }
+    ],
+    total_belanja: 73000
+  }
+])
+
+// 2. Tampilkan semua produk dalam kategori "Minuman" yang stoknya di bawah 10.
+db.produk.find({ kategori: "Minuman", stok: { $lt: 10 } })
+
+// 3. Tampilkan detail data pelanggan yang bernama "Siti Aminah"
+db.pelanggan.find({ nama: "Siti Aminah" })
+
+// 4. Tampilkan transaksi tanggal 22 Mei 2025 (ringkasan)
+db.transaksi.find(
+  {
+    tanggal_transaksi: {
+      $gte: ISODate("2025-05-22T00:00:00Z"),
+      $lt: ISODate("2025-05-23T00:00:00Z")
+    }
+  },
+  {
+    _id: 0,
+    tanggal_transaksi: 1,
+    total_belanja: 1,
+    metode_pembayaran: 1
+  }
+)
+
+// 5. Tampilkan daftar kategori produk yang unik
+db.produk.distinct("kategori")
+
+// 6. Hitung jumlah pelanggan yang tercatat
+db.pelanggan.countDocuments()
+
+// 7. Update stok dan harga beli “Indomie Goreng Spesial”
+db.produk.updateOne(
+  { nama_produk: "Indomie Goreng Spesial" },
+  {
+    $inc: { stok: 50 },
+    $set: { harga_beli: 2800 }
+  }
+)
+
+// 8. Tambahkan 10 poin loyalitas untuk pelanggan yang bergabung sebelum 1 Januari 2024
+db.pelanggan.updateMany(
+  { tanggal_gabung: { $lt: ISODate("2024-01-01T00:00:00Z") } },
+  { $inc: { poin_loyalitas: 10 } }
+)
+
+// 9. Update alamat Pak Budi Hartono
+db.pelanggan.updateOne(
+  { nama: "Budi Hartono" },
+  { $set: { alamat: "Jl. Cendrawasih No. 5, Gresik" } }
+)
+
+// 10. Hapus produk “Permen X” dari inventaris
+db.produk.deleteOne({ nama_produk: "Permen X" })
+
+// 11. Hapus transaksi "Tunai" sebelum tahun 2023
+db.transaksi.deleteMany({
+  metode_pembayaran: "Tunai",
+  tanggal_transaksi: { $lt: ISODate("2023-01-01T00:00:00Z") }
+})
+
+// 12. Total pendapatan dikelompokkan berdasarkan metode pembayaran, urut dari besar
+db.transaksi.aggregate([
+  {
+    $group: {
+      _id: "$metode_pembayaran",
+      total_pendapatan: { $sum: "$total_belanja" }
+    }
+  },
+  { $sort: { total_pendapatan: -1 } }
+])
+
+
+// 13.Tampilkan 3 pelanggan yang paling sering bertransaksi
+db.transaksi.aggregate([
+  {
+    $group: {
+      _id: "$nama_pelanggan",
+      jumlah_transaksi: { $sum: 1 }
+    }
+  },
+  { $sort: { jumlah_transaksi: -1 } },
+  { $limit: 3 }
+])
+
+// 14. Produk dengan stok < 5, tampilkan nama, kategori, dan stok, urut dari yang paling sedikit
+db.produk.find(
+  { stok: { $lt: 5 } },
+  { _id: 0, nama_produk: 1, kategori: 1, stok: 1 }
+).sort({ stok: 1 })
+
+show collections
